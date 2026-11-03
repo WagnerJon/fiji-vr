@@ -1,0 +1,33 @@
+<!doctype html><meta charset="utf-8"><title>Volume visibility regression</title><style>body{font:16px system-ui;background:#111;color:#eee}canvas{width:320px;height:320px}pre{white-space:pre-wrap}</style><h1>Volume visibility regression</h1><pre id="results">Running…</pre><script type="module">
+import * as THREE from '../src/main/resources/viewer/vendor/three.module.js';
+import {vertexShader,fragmentShader} from '../src/main/resources/viewer/volume-shader.js';
+import {volumeSamplingShader} from '../src/main/resources/viewer/volume-blocks.js';
+const results=document.querySelector('#results');
+try {
+ const n=32,data=new Uint8Array(n*n*n*4);
+ for(let z=0;z<n;z++)for(let y=0;y<n;y++)for(let x=0;x<n;x++){
+  const i=((z*n+y)*n+x)*4;data[i+3]=255;
+  if(x>=6&&x<26&&y>=6&&y<26){if(z>=20&&z<28)data[i]=166;if(z>=4&&z<12)data[i+2]=255;}
+ }
+ const renderer=new THREE.WebGLRenderer({alpha:true,antialias:false});renderer.setSize(64,64);renderer.setClearColor(0,1);document.body.appendChild(renderer.domElement);
+ const texture=new THREE.Data3DTexture(data,n,n,n);texture.format=THREE.RGBAFormat;texture.minFilter=texture.magFilter=THREE.LinearFilter;texture.unpackAlignment=1;texture.needsUpdate=true;
+ const grid=new THREE.Data3DTexture(new Uint8Array([255]),1,1,1);grid.format=THREE.RedFormat;grid.needsUpdate=true;
+ const uniforms={volumeBlock0:{value:texture},eye:{value:new THREE.Vector3()},extent:{value:new THREE.Vector3(1,1,1)},threshold:{value:.08},density:{value:2},clipDepth:{value:1},mode:{value:1},isRGB:{value:true},channelTint:{value:new THREE.Color(1,1,1)},voxelShape:{value:new THREE.Vector3(n,n,n)},accelerationGrid:{value:grid},accelerationShape:{value:new THREE.Vector3(1,1,1)},cellSize:{value:new THREE.Vector3(n,n,n)},useAcceleration:{value:true}};
+ const shader=fragmentShader.replace('__VOLUME_SAMPLERS__',volumeSamplingShader([{end:n,readStart:0,depth:n}],n));
+ const material=new THREE.ShaderMaterial({uniforms,vertexShader,fragmentShader:shader,side:THREE.BackSide,transparent:true,depthWrite:false});
+ const mesh=new THREE.Mesh(new THREE.BoxGeometry(1,1,1),material),scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(35,1,.01,10);scene.add(mesh);
+ const gl=renderer.getContext(),checks=[];
+ function pixel(z,mode,clip=1,threshold=.08){camera.position.set(0,0,z);camera.lookAt(0,0,0);uniforms.eye.value.copy(camera.position);uniforms.mode.value=mode;uniforms.clipDepth.value=clip;uniforms.threshold.value=threshold;renderer.render(scene,camera);const p=new Uint8Array(4);gl.readPixels(32,32,1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return [...p];}
+ function check(name,test,details){if(!test)throw new Error(name+' '+JSON.stringify(details));checks.push('PASS '+name+' '+JSON.stringify(details));}
+ const front=pixel(2,1),back=pixel(-2,1),mipFront=pixel(2,0),mipBack=pixel(-2,0);
+ check('Front red layer contributes before brighter blue back layer',front[0]>front[2]*2,front);
+ check('Rotating to opposite side brings blue layer to front',back[2]>back[0]*2,back);
+ check('MIP deliberately selects brighter blue layer from either side',mipFront[2]>200&&mipFront[0]===0&&mipBack[2]>200&&mipBack[0]===0,[mipFront,mipBack]);
+ const clipped=pixel(2,1,.5),restored=pixel(2,1,1),thresholded=pixel(2,1,1,.8);
+ check('Source Z clipping can remove front red layer; full depth restores it',clipped[0]===0&&restored[0]>50,[clipped,restored]);
+ check('High signal threshold deliberately excludes dimmer red layer',thresholded[0]===0&&thresholded[2]>0,thresholded);
+ uniforms.useAcceleration.value=false;const native=pixel(2,1);check('Accelerated and native front-to-back colors agree',native.every((v,i)=>v===front[i]),[native,front]);
+ check('No WebGL error',gl.getError()===gl.NO_ERROR,gl.getError());
+ results.textContent=checks.join('\n')+'\nALL CHECKS PASSED';
+} catch(error){results.textContent='FAIL '+error.stack;}
+</script>

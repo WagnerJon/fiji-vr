@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><title>Local image transport check</title><style>body{font:16px system-ui;background:#111c2b;color:#e8f1ff;padding:24px}pre{white-space:pre-wrap}</style><h1>Local image transport check</h1><p>Protocol test from the computer’s loopback viewer. This checks real cross-origin LAN requests, not the headset’s HTTPS permission prompt or over-air Wi-Fi speed.</p><pre id="result">Checking…</pre><script type="module">
+const result=document.querySelector('#result');
+try {
+ const params=new URLSearchParams(location.search),bootstrap=params.get('bootstrap'),headset=params.get('headset');
+ const {ImageTransport}=await import(new URL('local-transfer.js',bootstrap));
+ const {fetchByteRange}=await import(new URL('transfer.js',bootstrap));
+ const transport=new ImageTransport({baseURL:headset,permissions:{query:async()=>({state:'granted'})},fetcher:(url,options)=>fetch(url===new URL('connection.json',headset).href?new URL('connection.json',bootstrap).href:url,options)});
+ await transport.initialize();if(transport.route!=='wifi'||!transport.localBase)throw new Error(transport.message);
+ const start=performance.now(),bytes=await fetchByteRange('volume.raw',0,8*1024*1024,undefined,transport.fetch),elapsed=performance.now()-start;
+ let seed=123;
+ for(let i=0;i<bytes.length;i++){seed^=seed<<13;seed^=seed>>>17;seed^=seed<<5;if(bytes[i]!==((seed>>>0)&255))throw new Error('Byte mismatch at '+i);}
+ if(transport.route!=='wifi')throw new Error('Used relay fallback');
+ result.textContent=`PASS · 8 MiB transferred through the native browser fetch API and direct private-LAN endpoint\nPASS · every source byte matches the Java test fixture\nPASS · native chunk identity, cross-origin headers and response bodies validated\nPASS · selected route remains Local Wi-Fi; no relay fallback\nCompleted local-interface transfer in ${elapsed.toFixed(0)} ms (same-computer test, not a Quest Wi-Fi benchmark).`;
+}catch(error){result.textContent='FAIL · '+error.stack;}
+</script>

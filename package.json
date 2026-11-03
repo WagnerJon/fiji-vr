@@ -1,0 +1,8 @@
+{
+  "name": "fiji-vr-viewer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node tools/test-interaction.mjs && node tools/test-timeline.mjs && node tools/test-dimensions.mjs && node tools/test-resolution.mjs && node tools/test-volume-blocks.mjs && node tools/test-transfer.mjs && node tools/test-acceleration.mjs && node tools/test-ray-skipping.mjs && node tools/test-local-transfer.mjs"
+  }
+}
