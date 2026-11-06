@@ -112,7 +112,7 @@ The updated interaction math has additional deterministic checks for either-hand
 
 ## License
 
-Fiji VR's original code is available under the [BSD 2-Clause License](LICENSE).
+Fiji VR's original code is available under the [BSD 3-Clause License](LICENSE).
 Bundled third-party code retains its own license. See the
 [Three.js MIT license](src/main/resources/licenses/three-LICENSE.txt) and the
 [ZXing Apache 2.0 license](src/main/resources/licenses/zxing-LICENSE.txt).

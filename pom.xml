@@ -4,8 +4,8 @@
   <name>Fiji VR</name><description>Export calibrated ImageJ volumes for WebXR exploration.</description>
   <licenses>
     <license>
-      <name>BSD 2-Clause License</name>
-      <url>https://opensource.org/license/bsd-2-clause</url>
+      <name>BSD 3-Clause License</name>
+      <url>https://opensource.org/license/bsd-3-clause</url>
       <distribution>repo</distribution>
     </license>
   </licenses>
