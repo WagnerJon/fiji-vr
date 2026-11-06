@@ -24,6 +24,9 @@ for folder in (classes, tests):
     folder.mkdir(parents=True)
 subprocess.run([str(jdk/'bin/javac'), '--release', '8', '-cp', compile_cp, '-d', str(classes), *[str(p) for p in (root/'src/main/java').glob('*.java')]], check=True)
 shutil.copytree(root/'src/main/resources', classes, dirs_exist_ok=True)
+metadata = classes / 'META-INF'
+metadata.mkdir(exist_ok=True)
+shutil.copy2(root / 'LICENSE', metadata / 'LICENSE')
 with zipfile.ZipFile(zxing) as dependency:
     for entry in dependency.infolist():
         if entry.filename.startswith('com/google/zxing/') and not entry.is_dir():

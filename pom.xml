@@ -2,7 +2,27 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.fijivr</groupId><artifactId>fiji-vr</artifactId><version>0.12.0</version>
   <name>Fiji VR</name><description>Export calibrated ImageJ volumes for WebXR exploration.</description>
+  <licenses>
+    <license>
+      <name>BSD 2-Clause License</name>
+      <url>https://opensource.org/license/bsd-2-clause</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
   <properties><maven.compiler.source>8</maven.compiler.source><maven.compiler.target>8</maven.compiler.target><project.build.sourceEncoding>UTF-8</project.build.sourceEncoding></properties>
   <dependencies><dependency><groupId>net.imagej</groupId><artifactId>ij</artifactId><version>1.54p</version><scope>provided</scope></dependency><dependency><groupId>com.google.zxing</groupId><artifactId>core</artifactId><version>3.5.3</version></dependency></dependencies>
-  <build><plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.5.3</version><executions><execution><phase>package</phase><goals><goal>shade</goal></goals><configuration><createDependencyReducedPom>false</createDependencyReducedPom></configuration></execution></executions></plugin></plugins></build>
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>${project.basedir}</directory>
+        <targetPath>META-INF</targetPath>
+        <includes>
+          <include>LICENSE</include>
+        </includes>
+      </resource>
+    </resources>
+    <plugins><plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-shade-plugin</artifactId><version>3.5.3</version><executions><execution><phase>package</phase><goals><goal>shade</goal></goals><configuration><createDependencyReducedPom>false</createDependencyReducedPom></configuration></execution></executions></plugin></plugins></build>
 </project>
